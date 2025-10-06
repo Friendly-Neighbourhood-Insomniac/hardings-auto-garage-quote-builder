@@ -34,7 +34,7 @@ interface QuoteData {
   services: ServiceItem[];
 }
 
-const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: string) => {
+const generateQuoteHTML = async (quoteData: QuoteData, quoteNumber: string, logoUrl?: string) => {
   const total = quoteData.services.reduce(
     (sum, service) => sum + parseFloat(service.price),
     0
@@ -238,7 +238,7 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: 
     </head>
     <body>
       <div class="header">
-        ${logoUrl ? `<img src="${logoUrl}" alt="Hardings Auto Garage" class="logo" crossorigin="anonymous" />` : ''}
+        ${logoUrl ? `<img src="${logoUrl}" alt="Hardings Auto Garage" class="logo" />` : ''}
         <div class="contact-info">
           Swartruggens' Trusted Destination for Expert Mechanical Work<br>
           Phone: +27 76 268 3721 | WhatsApp Available
@@ -378,7 +378,7 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       
-      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      const html = await generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
       const result = await Print.printToFileAsync({ html });
 
       if (!result || !result.uri) {
@@ -418,7 +418,7 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       
-      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      const html = await generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
       const result = await Print.printToFileAsync({ html });
 
       if (!result || !result.uri) {
@@ -470,7 +470,7 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       
-      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      const html = await generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
       
       if (Platform.OS === "web") {
         const result = await Print.printToFileAsync({ html });
