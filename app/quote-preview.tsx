@@ -70,132 +70,126 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
         }
         @page {
           size: A4;
-          margin: 20mm 15mm;
+          margin: 15mm;
         }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           color: #1D3557;
-          line-height: 1.4;
-          font-size: 11px;
+          line-height: 1.3;
+          font-size: 10px;
         }
         .header {
           text-align: center;
-          margin-bottom: 16px;
-          padding-bottom: 12px;
-          border-bottom: 3px solid #E63946;
+          margin-bottom: 10px;
+          padding-bottom: 8px;
+          border-bottom: 2px solid #E63946;
         }
         .logo {
-          width: 240px;
+          width: 180px;
           height: auto;
-          margin: 0 auto 8px;
+          margin: 0 auto 4px;
           display: block;
         }
-        .company-name {
-          font-size: 20px;
-          font-weight: 700;
-          color: #1D3557;
-          margin-bottom: 4px;
-        }
         .contact-info {
-          font-size: 9px;
+          font-size: 8px;
           color: #6C757D;
-          line-height: 1.5;
+          line-height: 1.3;
         }
         .quote-header {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 16px;
-          padding: 12px 16px;
+          margin-bottom: 10px;
+          padding: 8px 12px;
           background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
-          border-radius: 6px;
+          border-radius: 4px;
         }
         .quote-info-item {
           flex: 1;
         }
         .info-label {
-          font-size: 9px;
+          font-size: 8px;
           color: #A8DADC;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 4px;
+          letter-spacing: 0.3px;
+          margin-bottom: 2px;
         }
         .info-value {
-          font-size: 13px;
+          font-size: 11px;
           font-weight: 700;
           color: #ffffff;
         }
         .content-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          margin-bottom: 16px;
+          gap: 8px;
+          margin-bottom: 10px;
         }
         .info-box {
-          padding: 12px;
+          padding: 8px;
           background-color: #F8F9FA;
-          border-left: 4px solid #2B4C7E;
-          border-radius: 4px;
+          border-left: 3px solid #2B4C7E;
+          border-radius: 3px;
         }
         .box-title {
-          font-size: 11px;
+          font-size: 9px;
           font-weight: 700;
           color: #2B4C7E;
-          margin-bottom: 8px;
+          margin-bottom: 5px;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.3px;
         }
         .detail-row {
           display: flex;
-          margin-bottom: 4px;
+          margin-bottom: 2px;
         }
         .detail-label {
           font-weight: 600;
           color: #6C757D;
-          width: 70px;
-          font-size: 10px;
+          width: 55px;
+          font-size: 9px;
         }
         .detail-value {
           color: #1D3557;
-          font-size: 10px;
+          font-size: 9px;
           flex: 1;
         }
         .services-section {
-          margin-bottom: 16px;
+          margin-bottom: 10px;
         }
         .section-title {
-          font-size: 13px;
+          font-size: 10px;
           font-weight: 700;
           color: #2B4C7E;
-          margin-bottom: 10px;
-          padding-bottom: 6px;
+          margin-bottom: 6px;
+          padding-bottom: 4px;
           border-bottom: 2px solid #E63946;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.3px;
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 16px;
+          margin-bottom: 10px;
           background-color: #ffffff;
           border: 1px solid #dee2e6;
-          border-radius: 6px;
+          border-radius: 4px;
           overflow: hidden;
         }
         th {
           background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
           color: white;
-          padding: 10px 12px;
+          padding: 6px 8px;
           text-align: left;
           font-weight: 600;
           text-transform: uppercase;
-          font-size: 10px;
-          letter-spacing: 0.5px;
+          font-size: 8px;
+          letter-spacing: 0.3px;
         }
         th:last-child {
           text-align: right;
         }
         td {
-          padding: 8px 12px;
+          padding: 5px 8px;
           border-bottom: 1px solid #dee2e6;
         }
         tbody tr:last-child td {
@@ -204,10 +198,9 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
         .total-section {
           background: linear-gradient(135deg, #E63946 0%, #C62828 100%);
           color: white;
-          padding: 16px 20px;
-          border-radius: 6px;
-          margin-bottom: 16px;
-          box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
+          padding: 10px 14px;
+          border-radius: 4px;
+          margin-bottom: 10px;
         }
         .total-row {
           display: flex;
@@ -215,28 +208,28 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
           align-items: center;
         }
         .total-label {
-          font-size: 14px;
+          font-size: 11px;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.3px;
         }
         .total-amount {
-          font-size: 24px;
+          font-size: 18px;
           font-weight: 700;
         }
         .footer {
-          margin-top: 16px;
-          padding-top: 12px;
-          border-top: 2px solid #DEE2E6;
+          margin-top: 10px;
+          padding-top: 8px;
+          border-top: 1px solid #DEE2E6;
           text-align: center;
           color: #6C757D;
-          font-size: 8px;
-          line-height: 1.5;
+          font-size: 7px;
+          line-height: 1.4;
         }
         .footer-note {
-          margin-top: 6px;
+          margin-top: 4px;
           font-style: italic;
-          font-size: 7px;
+          font-size: 6px;
           color: #868e96;
         }
       </style>
