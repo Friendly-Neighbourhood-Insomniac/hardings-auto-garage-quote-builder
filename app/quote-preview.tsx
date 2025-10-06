@@ -49,8 +49,8 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
     .map(
       (service, index) => `
     <tr style="${index % 2 === 0 ? "background-color: #f8f9fa;" : ""}">
-      <td style="padding: 8px 12px; border-bottom: 1px solid #dee2e6; font-size: 11px; color: #2c3e50;">${service.name}</td>
-      <td style="padding: 8px 12px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 11px; color: #1D3557;">R ${parseFloat(service.price).toFixed(2)}</td>
+      <td style="padding: 10px 12px; border-bottom: 1px solid #dee2e6; font-size: 10px; color: #2c3e50;">${service.name}</td>
+      <td style="padding: 10px 12px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 10px; color: #1D3557;">R ${parseFloat(service.price).toFixed(2)}</td>
     </tr>
   `
     )
@@ -70,38 +70,40 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
         }
         @page {
           size: A4;
-          margin: 15mm;
+          margin: 20mm 15mm;
         }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           color: #1D3557;
-          line-height: 1.3;
+          line-height: 1.4;
           font-size: 10px;
+          max-width: 100%;
+          overflow: hidden;
         }
         .header {
           text-align: center;
-          margin-bottom: 10px;
-          padding-bottom: 8px;
-          border-bottom: 2px solid #E63946;
+          margin-bottom: 12px;
+          padding-bottom: 10px;
+          border-bottom: 3px solid #E63946;
         }
         .logo {
-          width: 180px;
+          width: 160px;
           height: auto;
-          margin: 0 auto 4px;
+          margin: 0 auto 6px;
           display: block;
         }
         .contact-info {
-          font-size: 8px;
+          font-size: 9px;
           color: #6C757D;
-          line-height: 1.3;
+          line-height: 1.4;
         }
         .quote-header {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 10px;
-          padding: 8px 12px;
+          margin-bottom: 12px;
+          padding: 10px 14px;
           background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
-          border-radius: 4px;
+          border-radius: 6px;
         }
         .quote-info-item {
           flex: 1;
@@ -121,14 +123,14 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
         .content-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 8px;
-          margin-bottom: 10px;
+          gap: 10px;
+          margin-bottom: 12px;
         }
         .info-box {
-          padding: 8px;
+          padding: 10px;
           background-color: #F8F9FA;
           border-left: 3px solid #2B4C7E;
-          border-radius: 3px;
+          border-radius: 4px;
         }
         .box-title {
           font-size: 9px;
@@ -154,42 +156,42 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
           flex: 1;
         }
         .services-section {
-          margin-bottom: 10px;
+          margin-bottom: 12px;
         }
         .section-title {
-          font-size: 10px;
+          font-size: 11px;
           font-weight: 700;
           color: #2B4C7E;
-          margin-bottom: 6px;
-          padding-bottom: 4px;
+          margin-bottom: 8px;
+          padding-bottom: 5px;
           border-bottom: 2px solid #E63946;
           text-transform: uppercase;
-          letter-spacing: 0.3px;
+          letter-spacing: 0.5px;
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 10px;
+          margin-bottom: 12px;
           background-color: #ffffff;
           border: 1px solid #dee2e6;
-          border-radius: 4px;
+          border-radius: 6px;
           overflow: hidden;
         }
         th {
           background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
           color: white;
-          padding: 6px 8px;
+          padding: 8px 12px;
           text-align: left;
           font-weight: 600;
           text-transform: uppercase;
-          font-size: 8px;
-          letter-spacing: 0.3px;
+          font-size: 9px;
+          letter-spacing: 0.5px;
         }
         th:last-child {
           text-align: right;
         }
         td {
-          padding: 5px 8px;
+          padding: 10px 12px;
           border-bottom: 1px solid #dee2e6;
         }
         tbody tr:last-child td {
@@ -198,9 +200,9 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
         .total-section {
           background: linear-gradient(135deg, #E63946 0%, #C62828 100%);
           color: white;
-          padding: 10px 14px;
-          border-radius: 4px;
-          margin-bottom: 10px;
+          padding: 12px 16px;
+          border-radius: 6px;
+          margin-bottom: 12px;
         }
         .total-row {
           display: flex;
@@ -208,28 +210,28 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
           align-items: center;
         }
         .total-label {
-          font-size: 11px;
+          font-size: 12px;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.3px;
+          letter-spacing: 0.5px;
         }
         .total-amount {
-          font-size: 18px;
+          font-size: 20px;
           font-weight: 700;
         }
         .footer {
-          margin-top: 10px;
-          padding-top: 8px;
+          margin-top: 12px;
+          padding-top: 10px;
           border-top: 1px solid #DEE2E6;
           text-align: center;
           color: #6C757D;
-          font-size: 7px;
-          line-height: 1.4;
+          font-size: 8px;
+          line-height: 1.5;
         }
         .footer-note {
-          margin-top: 4px;
+          margin-top: 5px;
           font-style: italic;
-          font-size: 6px;
+          font-size: 7px;
           color: #868e96;
         }
       </style>
