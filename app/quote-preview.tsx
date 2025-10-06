@@ -378,7 +378,13 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       const html = generateQuoteHTML(quoteData, quoteNumber);
-      const { uri } = await Print.printToFileAsync({ html });
+      const result = await Print.printToFileAsync({ html });
+
+      if (!result || !result.uri) {
+        throw new Error("Failed to generate PDF file");
+      }
+
+      const { uri } = result;
 
       if (Platform.OS === "web") {
         const link = document.createElement("a");
@@ -411,7 +417,13 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       const html = generateQuoteHTML(quoteData, quoteNumber);
-      const { uri } = await Print.printToFileAsync({ html });
+      const result = await Print.printToFileAsync({ html });
+
+      if (!result || !result.uri) {
+        throw new Error("Failed to generate PDF file");
+      }
+
+      const { uri } = result;
 
       const message = `Hi ${quoteData.clientName}, here's your quote from Hardings Auto Garage.\n\nQuote #${quoteNumber}\nVehicle: ${quoteData.vehicleMake} ${quoteData.vehicleModel}${quoteData.vehicleYear ? ` (${quoteData.vehicleYear})` : ""}\nTotal: R ${total.toFixed(2)}\n\nPlease find the detailed quote attached.`;
 
@@ -458,8 +470,11 @@ export default function QuotePreviewScreen() {
       const html = generateQuoteHTML(quoteData, quoteNumber);
       
       if (Platform.OS === "web") {
-        const { uri } = await Print.printToFileAsync({ html });
-        window.open(uri, "_blank");
+        const result = await Print.printToFileAsync({ html });
+        if (!result || !result.uri) {
+          throw new Error("Failed to generate PDF file");
+        }
+        window.open(result.uri, "_blank");
       } else {
         await Print.printAsync({ html });
       }
