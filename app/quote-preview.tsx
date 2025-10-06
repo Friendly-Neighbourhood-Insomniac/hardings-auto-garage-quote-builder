@@ -316,11 +316,17 @@ export default function QuotePreviewScreen() {
   let quoteData: QuoteData | null = null;
   
   try {
-    if (params.quoteData && typeof params.quoteData === 'string') {
-      quoteData = JSON.parse(params.quoteData);
+    if (params.quoteData) {
+      const dataString = Array.isArray(params.quoteData) 
+        ? params.quoteData[0] 
+        : params.quoteData;
+      
+      if (typeof dataString === 'string') {
+        quoteData = JSON.parse(dataString);
+      }
     }
   } catch (error) {
-    console.error('Error parsing quote data:', error);
+    console.error('Error parsing quote data:', error, params.quoteData);
     Alert.alert('Error', 'Invalid quote data. Please try again.');
   }
 
