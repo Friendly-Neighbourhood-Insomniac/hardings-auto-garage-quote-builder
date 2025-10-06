@@ -49,8 +49,8 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
     .map(
       (service, index) => `
     <tr style="${index % 2 === 0 ? "background-color: #f8f9fa;" : ""}">
-      <td style="padding: 5px 8px; border-bottom: 1px solid #dee2e6; font-size: 9px;">${service.name}</td>
-      <td style="padding: 5px 8px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 9px;">R ${parseFloat(service.price).toFixed(2)}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #dee2e6; font-size: 11px; color: #2c3e50;">${service.name}</td>
+      <td style="padding: 8px 12px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 11px; color: #1D3557;">R ${parseFloat(service.price).toFixed(2)}</td>
     </tr>
   `
     )
@@ -70,116 +70,144 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
         }
         @page {
           size: A4;
-          margin: 0;
+          margin: 20mm 15mm;
         }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-          padding: 15px 25px;
           color: #1D3557;
-          margin: 0;
+          line-height: 1.4;
+          font-size: 11px;
         }
         .header {
           text-align: center;
-          margin-bottom: 10px;
-          padding-bottom: 8px;
-          border-bottom: 2px solid #E63946;
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 3px solid #E63946;
         }
         .logo {
-          width: 200px;
+          width: 240px;
           height: auto;
-          margin: 0 auto 5px;
+          margin: 0 auto 8px;
           display: block;
         }
-        .contact-info {
-          margin-top: 4px;
-          font-size: 8px;
-          color: #6C757D;
+        .company-name {
+          font-size: 20px;
+          font-weight: 700;
+          color: #1D3557;
+          margin-bottom: 4px;
         }
-        .quote-info {
+        .contact-info {
+          font-size: 9px;
+          color: #6C757D;
+          line-height: 1.5;
+        }
+        .quote-header {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 8px;
-          padding: 8px 10px;
-          background-color: #F1FAEE;
-          border-radius: 4px;
+          margin-bottom: 16px;
+          padding: 12px 16px;
+          background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
+          border-radius: 6px;
         }
-        .info-section {
+        .quote-info-item {
           flex: 1;
         }
         .info-label {
-          font-size: 8px;
-          color: #6C757D;
+          font-size: 9px;
+          color: #A8DADC;
           text-transform: uppercase;
-          letter-spacing: 0.2px;
-          margin-bottom: 2px;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
         }
         .info-value {
-          font-size: 10px;
-          font-weight: 600;
-          color: #1D3557;
+          font-size: 13px;
+          font-weight: 700;
+          color: #ffffff;
         }
-        .section-title {
+        .content-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-bottom: 16px;
+        }
+        .info-box {
+          padding: 12px;
+          background-color: #F8F9FA;
+          border-left: 4px solid #2B4C7E;
+          border-radius: 4px;
+        }
+        .box-title {
           font-size: 11px;
           font-weight: 700;
           color: #2B4C7E;
-          margin-bottom: 6px;
-          padding-bottom: 3px;
-          border-bottom: 1.5px solid #A8DADC;
-        }
-        .client-details, .vehicle-details {
           margin-bottom: 8px;
-          padding: 8px 10px;
-          background-color: #ffffff;
-          border: 1px solid #DEE2E6;
-          border-radius: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .detail-row {
           display: flex;
-          margin-bottom: 3px;
+          margin-bottom: 4px;
         }
         .detail-label {
           font-weight: 600;
           color: #6C757D;
-          width: 100px;
-          font-size: 9px;
+          width: 70px;
+          font-size: 10px;
         }
         .detail-value {
           color: #1D3557;
-          font-size: 9px;
+          font-size: 10px;
+          flex: 1;
+        }
+        .services-section {
+          margin-bottom: 16px;
+        }
+        .section-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: #2B4C7E;
+          margin-bottom: 10px;
+          padding-bottom: 6px;
+          border-bottom: 2px solid #E63946;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 8px;
+          margin-bottom: 16px;
           background-color: #ffffff;
-          border-radius: 4px;
+          border: 1px solid #dee2e6;
+          border-radius: 6px;
           overflow: hidden;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.08);
         }
         th {
-          background-color: #2B4C7E;
+          background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
           color: white;
-          padding: 6px 8px;
+          padding: 10px 12px;
           text-align: left;
           font-weight: 600;
           text-transform: uppercase;
-          font-size: 9px;
-          letter-spacing: 0.2px;
+          font-size: 10px;
+          letter-spacing: 0.5px;
         }
         th:last-child {
           text-align: right;
         }
         td {
-          padding: 5px 8px;
+          padding: 8px 12px;
           border-bottom: 1px solid #dee2e6;
-          font-size: 9px;
+        }
+        tbody tr:last-child td {
+          border-bottom: none;
         }
         .total-section {
-          background-color: #2B4C7E;
+          background: linear-gradient(135deg, #E63946 0%, #C62828 100%);
           color: white;
-          padding: 10px 12px;
-          border-radius: 4px;
-          margin-bottom: 8px;
+          padding: 16px 20px;
+          border-radius: 6px;
+          margin-bottom: 16px;
+          box-shadow: 0 4px 12px rgba(230, 57, 70, 0.3);
         }
         .total-row {
           display: flex;
@@ -187,26 +215,29 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
           align-items: center;
         }
         .total-label {
-          font-size: 12px;
+          font-size: 14px;
           font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .total-amount {
-          font-size: 18px;
+          font-size: 24px;
           font-weight: 700;
         }
         .footer {
-          margin-top: 8px;
-          padding-top: 8px;
-          border-top: 1.5px solid #DEE2E6;
+          margin-top: 16px;
+          padding-top: 12px;
+          border-top: 2px solid #DEE2E6;
           text-align: center;
           color: #6C757D;
-          font-size: 7px;
-          line-height: 1.3;
+          font-size: 8px;
+          line-height: 1.5;
         }
         .footer-note {
-          margin-top: 4px;
+          margin-top: 6px;
           font-style: italic;
-          font-size: 6px;
+          font-size: 7px;
+          color: #868e96;
         }
       </style>
     </head>
@@ -219,73 +250,77 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string) => {
         </div>
       </div>
 
-      <div class="quote-info">
-        <div class="info-section">
+      <div class="quote-header">
+        <div class="quote-info-item">
           <div class="info-label">Quote Number</div>
           <div class="info-value">${quoteNumber}</div>
         </div>
-        <div class="info-section">
+        <div class="quote-info-item" style="text-align: right;">
           <div class="info-label">Date</div>
           <div class="info-value">${date}</div>
         </div>
       </div>
 
-      <div class="client-details">
-        <div class="section-title">Client Information</div>
-        <div class="detail-row">
-          <div class="detail-label">Name:</div>
-          <div class="detail-value">${quoteData.clientName}</div>
+      <div class="content-grid">
+        <div class="info-box">
+          <div class="box-title">Client Information</div>
+          <div class="detail-row">
+            <div class="detail-label">Name:</div>
+            <div class="detail-value">${quoteData.clientName}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Phone:</div>
+            <div class="detail-value">${quoteData.clientPhone}</div>
+          </div>
+          ${
+            quoteData.clientEmail
+              ? `
+          <div class="detail-row">
+            <div class="detail-label">Email:</div>
+            <div class="detail-value">${quoteData.clientEmail}</div>
+          </div>
+          `
+              : ""
+          }
         </div>
-        <div class="detail-row">
-          <div class="detail-label">Phone:</div>
-          <div class="detail-value">${quoteData.clientPhone}</div>
+
+        <div class="info-box">
+          <div class="box-title">Vehicle Information</div>
+          <div class="detail-row">
+            <div class="detail-label">Make:</div>
+            <div class="detail-value">${quoteData.vehicleMake}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Model:</div>
+            <div class="detail-value">${quoteData.vehicleModel}</div>
+          </div>
+          ${
+            quoteData.vehicleYear
+              ? `
+          <div class="detail-row">
+            <div class="detail-label">Year:</div>
+            <div class="detail-value">${quoteData.vehicleYear}</div>
+          </div>
+          `
+              : ""
+          }
         </div>
-        ${
-          quoteData.clientEmail
-            ? `
-        <div class="detail-row">
-          <div class="detail-label">Email:</div>
-          <div class="detail-value">${quoteData.clientEmail}</div>
-        </div>
-        `
-            : ""
-        }
       </div>
 
-      <div class="vehicle-details">
-        <div class="section-title">Vehicle Information</div>
-        <div class="detail-row">
-          <div class="detail-label">Make:</div>
-          <div class="detail-value">${quoteData.vehicleMake}</div>
-        </div>
-        <div class="detail-row">
-          <div class="detail-label">Model:</div>
-          <div class="detail-value">${quoteData.vehicleModel}</div>
-        </div>
-        ${
-          quoteData.vehicleYear
-            ? `
-        <div class="detail-row">
-          <div class="detail-label">Year:</div>
-          <div class="detail-value">${quoteData.vehicleYear}</div>
-        </div>
-        `
-            : ""
-        }
+      <div class="services-section">
+        <div class="section-title">Services Quoted</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Service Description</th>
+              <th style="text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${servicesHTML}
+          </tbody>
+        </table>
       </div>
-
-      <div class="section-title">Services</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Service Description</th>
-            <th style="text-align: right;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${servicesHTML}
-        </tbody>
-      </table>
 
       <div class="total-section">
         <div class="total-row">
