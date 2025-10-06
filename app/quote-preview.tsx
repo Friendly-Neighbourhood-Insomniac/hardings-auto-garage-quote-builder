@@ -34,7 +34,7 @@ interface QuoteData {
   services: ServiceItem[];
 }
 
-const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoBase64?: string) => {
+const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: string) => {
   const total = quoteData.services.reduce(
     (sum, service) => sum + parseFloat(service.price),
     0
@@ -238,7 +238,7 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoBase64
     </head>
     <body>
       <div class="header">
-        ${logoBase64 ? `<img src="${logoBase64}" alt="Hardings Auto Garage" class="logo" />` : ''}
+        ${logoUrl ? `<img src="${logoUrl}" alt="Hardings Auto Garage" class="logo" crossorigin="anonymous" />` : ''}
         <div class="contact-info">
           Swartruggens' Trusted Destination for Expert Mechanical Work<br>
           Phone: +27 76 268 3721 | WhatsApp Available
@@ -378,20 +378,7 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       
-      let logoBase64: string | undefined;
-      try {
-        const response = await fetch(LOGO_URL);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        logoBase64 = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      } catch (error) {
-        console.error('Error loading logo:', error);
-      }
-      
-      const html = generateQuoteHTML(quoteData, quoteNumber, logoBase64);
+      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
       const result = await Print.printToFileAsync({ html });
 
       if (!result || !result.uri) {
@@ -431,20 +418,7 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       
-      let logoBase64: string | undefined;
-      try {
-        const response = await fetch(LOGO_URL);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        logoBase64 = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      } catch (error) {
-        console.error('Error loading logo:', error);
-      }
-      
-      const html = generateQuoteHTML(quoteData, quoteNumber, logoBase64);
+      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
       const result = await Print.printToFileAsync({ html });
 
       if (!result || !result.uri) {
@@ -496,20 +470,7 @@ export default function QuotePreviewScreen() {
     try {
       setIsGenerating(true);
       
-      let logoBase64: string | undefined;
-      try {
-        const response = await fetch(LOGO_URL);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        logoBase64 = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-      } catch (error) {
-        console.error('Error loading logo:', error);
-      }
-      
-      const html = generateQuoteHTML(quoteData, quoteNumber, logoBase64);
+      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
       
       if (Platform.OS === "web") {
         const result = await Print.printToFileAsync({ html });
