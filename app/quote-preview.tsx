@@ -34,7 +34,7 @@ interface QuoteData {
   services: ServiceItem[];
 }
 
-const generateQuoteHTML = async (quoteData: QuoteData, quoteNumber: string, logoUrl?: string) => {
+const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: string) => {
   const total = quoteData.services.reduce(
     (sum, service) => sum + parseFloat(service.price),
     0
@@ -377,15 +377,21 @@ export default function QuotePreviewScreen() {
   const handleDownloadPDF = async () => {
     try {
       setIsGenerating(true);
+      console.log('Starting PDF generation...');
       
-      const html = await generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      console.log('HTML generated, printing to file...');
+      
       const result = await Print.printToFileAsync({ html });
+      console.log('Print result:', result);
 
       if (!result || !result.uri) {
+        console.error('Invalid print result:', result);
         throw new Error("Failed to generate PDF file");
       }
 
       const { uri } = result;
+      console.log('PDF generated at:', uri);
 
       if (Platform.OS === "web") {
         const link = document.createElement("a");
@@ -408,7 +414,8 @@ export default function QuotePreviewScreen() {
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      Alert.alert("Error", "Failed to generate PDF. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      Alert.alert("Error", `Failed to generate PDF: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
@@ -417,15 +424,21 @@ export default function QuotePreviewScreen() {
   const handleWhatsAppShare = async () => {
     try {
       setIsGenerating(true);
+      console.log('Starting WhatsApp share...');
       
-      const html = await generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      console.log('HTML generated for WhatsApp...');
+      
       const result = await Print.printToFileAsync({ html });
+      console.log('WhatsApp print result:', result);
 
       if (!result || !result.uri) {
+        console.error('Invalid WhatsApp print result:', result);
         throw new Error("Failed to generate PDF file");
       }
 
       const { uri } = result;
+      console.log('WhatsApp PDF generated at:', uri);
 
       const message = `Hi ${quoteData.clientName}, here's your quote from Hardings Auto Garage.\n\nQuote #${quoteNumber}\nVehicle: ${quoteData.vehicleMake} ${quoteData.vehicleModel}${quoteData.vehicleYear ? ` (${quoteData.vehicleYear})` : ""}\nTotal: R ${total.toFixed(2)}\n\nPlease find the detailed quote attached.`;
 
@@ -460,7 +473,8 @@ export default function QuotePreviewScreen() {
       }
     } catch (error) {
       console.error("Error sharing via WhatsApp:", error);
-      Alert.alert("Error", "Failed to share via WhatsApp. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      Alert.alert("Error", `Failed to share via WhatsApp: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
@@ -469,21 +483,29 @@ export default function QuotePreviewScreen() {
   const handlePreviewPDF = async () => {
     try {
       setIsGenerating(true);
+      console.log('Starting PDF preview...');
       
-      const html = await generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
+      console.log('HTML generated for preview...');
       
       if (Platform.OS === "web") {
+        console.log('Generating PDF for web preview...');
         const result = await Print.printToFileAsync({ html });
+        console.log('Web preview result:', result);
+        
         if (!result || !result.uri) {
+          console.error('Invalid web preview result:', result);
           throw new Error("Failed to generate PDF file");
         }
         window.open(result.uri, "_blank");
       } else {
+        console.log('Opening native print dialog...');
         await Print.printAsync({ html });
       }
     } catch (error) {
       console.error("Error previewing PDF:", error);
-      Alert.alert("Error", "Failed to preview PDF. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      Alert.alert("Error", `Failed to preview PDF: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
