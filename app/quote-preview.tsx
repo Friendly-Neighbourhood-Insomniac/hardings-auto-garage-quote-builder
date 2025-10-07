@@ -53,6 +53,7 @@ const pdfStyles = PDFStyleSheet.create({
     width: 200,
     height: 70,
     marginBottom: 10,
+    objectFit: 'contain',
   },
   companyName: {
     fontSize: 24,
@@ -241,7 +242,10 @@ const QuotePDFDocument = ({ quoteData, quoteNumber }: { quoteData: QuoteData; qu
     <Document>
       <Page size="A4" style={pdfStyles.page}>
         <PDFView style={pdfStyles.header}>
-          <PDFImage src={LOGO_URL} style={pdfStyles.logo} />
+          <PDFImage 
+            src="https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/3gralkwioadzfy34kng2o" 
+            style={pdfStyles.logo}
+          />
           <PDFText style={pdfStyles.tagline}>
             Swartruggens&apos; Trusted Destination for Expert Mechanical Work
           </PDFText>
@@ -351,6 +355,7 @@ const generateProfessionalPDF = async (
   quoteNumber: string
 ): Promise<string> => {
   console.log("Creating PDF document from scratch...");
+  console.log("Logo URL being used:", LOGO_URL);
   const doc = <QuotePDFDocument quoteData={quoteData} quoteNumber={quoteNumber} />;
   const asPdf = pdf(doc);
   const blob = await asPdf.toBlob();
