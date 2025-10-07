@@ -1,5 +1,4 @@
 import * as FileSystem from "expo-file-system";
-import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { Download, MessageCircle, ArrowLeft } from "lucide-react-native";
@@ -16,6 +15,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { Document, Page, Text as PDFText, View as PDFView, Image as PDFImage, StyleSheet as PDFStyleSheet, pdf } from "@react-pdf/renderer";
 
 import Colors from "@/constants/colors";
 import { LOGO_URL } from "@/constants/logo";
@@ -36,10 +36,197 @@ interface QuoteData {
   services: ServiceItem[];
 }
 
-const generateProfessionalPDF = async (
-  quoteData: QuoteData,
-  quoteNumber: string
-): Promise<string> => {
+const pdfStyles = PDFStyleSheet.create({
+  page: {
+    padding: 40,
+    fontSize: 10,
+    fontFamily: 'Helvetica',
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottom: '4px solid #E63946',
+    alignItems: 'center',
+  },
+  logo: {
+    width: 200,
+    height: 70,
+    marginBottom: 10,
+  },
+  companyName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1D3557',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  tagline: {
+    fontSize: 9,
+    color: '#6C757D',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  contactInfo: {
+    fontSize: 9,
+    color: '#6C757D',
+    textAlign: 'center',
+  },
+  quoteHeader: {
+    backgroundColor: '#1D3557',
+    color: 'white',
+    padding: 15,
+    borderRadius: 6,
+    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  quoteInfoItem: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 8,
+    color: '#A8DADC',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  contentGrid: {
+    flexDirection: 'row',
+    gap: 15,
+    marginBottom: 20,
+  },
+  infoBox: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: '#F8F9FA',
+    borderLeft: '4px solid #2B4C7E',
+    borderRadius: 4,
+  },
+  boxTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#2B4C7E',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    marginBottom: 5,
+  },
+  detailLabel: {
+    fontWeight: 'bold',
+    color: '#6C757D',
+    width: 60,
+    fontSize: 9,
+  },
+  detailValue: {
+    color: '#1D3557',
+    fontSize: 9,
+    flex: 1,
+  },
+  servicesSection: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#2B4C7E',
+    marginBottom: 10,
+    paddingBottom: 6,
+    borderBottom: '3px solid #E63946',
+    textTransform: 'uppercase',
+  },
+  table: {
+    marginBottom: 20,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#1D3557',
+    padding: 10,
+    color: 'white',
+  },
+  tableHeaderText: {
+    fontSize: 9,
+    fontWeight: 'bold',
+    color: 'white',
+    textTransform: 'uppercase',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    padding: 10,
+    borderBottom: '1px solid #dee2e6',
+  },
+  tableRowAlt: {
+    backgroundColor: '#f8f9fa',
+  },
+  serviceNameCell: {
+    flex: 1,
+    paddingRight: 10,
+  },
+  serviceName: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#2c3e50',
+    marginBottom: 3,
+  },
+  serviceDescription: {
+    fontSize: 8,
+    color: '#6C757D',
+    fontStyle: 'italic',
+    lineHeight: 1.4,
+  },
+  servicePriceCell: {
+    width: 80,
+    textAlign: 'right',
+  },
+  servicePrice: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#1D3557',
+  },
+  totalSection: {
+    backgroundColor: '#E63946',
+    color: 'white',
+    padding: 18,
+    borderRadius: 6,
+    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  totalLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+    textTransform: 'uppercase',
+  },
+  totalAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  footer: {
+    marginTop: 20,
+    paddingTop: 15,
+    borderTop: '2px solid #DEE2E6',
+    textAlign: 'center',
+    color: '#6C757D',
+    fontSize: 8,
+  },
+  footerNote: {
+    marginTop: 8,
+    fontStyle: 'italic',
+    fontSize: 7,
+    color: '#868e96',
+  },
+});
+
+const QuotePDFDocument = ({ quoteData, quoteNumber }: { quoteData: QuoteData; quoteNumber: string }) => {
   const total = quoteData.services.reduce(
     (sum, service) => sum + parseFloat(service.price),
     0
@@ -50,354 +237,145 @@ const generateProfessionalPDF = async (
     day: "numeric",
   });
 
-  let logoBase64 = "";
-  try {
-    if (Platform.OS === "web") {
-      const response = await fetch(LOGO_URL);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      logoBase64 = await new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } else {
-      const response = await fetch(LOGO_URL);
-      const base64 = await response.text();
-      if (base64.startsWith('data:')) {
-        logoBase64 = base64;
-      } else {
-        const imageData = await FileSystem.readAsStringAsync(
-          await FileSystem.downloadAsync(
-            LOGO_URL,
-            FileSystem.cacheDirectory + 'logo.png'
-          ).then(res => res.uri),
-          { encoding: FileSystem.EncodingType.Base64 }
-        );
-        logoBase64 = `data:image/png;base64,${imageData}`;
-      }
-    }
-  } catch (error) {
-    console.error("Error loading logo:", error);
-    logoBase64 = LOGO_URL;
-  }
-
-  const servicesHTML = quoteData.services
-    .map(
-      (service, index) => `
-    <tr style="${index % 2 === 0 ? "background-color: #f8f9fa;" : ""}">
-      <td style="padding: 14px 16px; border-bottom: 1px solid #dee2e6; font-size: 13px; color: #2c3e50;">
-        <div style="font-weight: 600; margin-bottom: ${service.description ? "6px" : "0"};">${service.name}</div>
-        ${service.description ? `<div style="font-size: 11px; color: #6C757D; line-height: 1.5; margin-top: 4px; font-style: italic;">${service.description}</div>` : ""}
-      </td>
-      <td style="padding: 14px 16px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 13px; color: #1D3557; vertical-align: top;">R ${parseFloat(service.price).toFixed(2)}</td>
-    </tr>
-  `
-    )
-    .join("");
-
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        @page {
-          size: A4;
-          margin: 15mm;
-        }
-        * {
-          margin: 0;
-          padding: 0;
-          box-sizing: border-box;
-        }
-        body {
-          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-          color: #1D3557;
-          line-height: 1.5;
-          font-size: 13px;
-          padding: 0;
-          margin: 0;
-        }
-        .container {
-          max-width: 100%;
-          margin: 0 auto;
-        }
-        .header {
-          text-align: center;
-          margin-bottom: 20px;
-          padding-bottom: 15px;
-          border-bottom: 4px solid #E63946;
-        }
-        .logo {
-          width: 220px;
-          height: auto;
-          margin: 0 auto 10px;
-          display: block;
-        }
-        .company-name {
-          font-size: 24px;
-          font-weight: 700;
-          color: #1D3557;
-          margin-bottom: 5px;
-        }
-        .tagline {
-          font-size: 11px;
-          color: #6C757D;
-          margin-bottom: 8px;
-        }
-        .contact-info {
-          font-size: 11px;
-          color: #6C757D;
-          line-height: 1.6;
-        }
-        .quote-header {
-          background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
-          color: white;
-          padding: 18px 20px;
-          border-radius: 8px;
-          margin-bottom: 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .quote-info-item {
-          flex: 1;
-        }
-        .info-label {
-          font-size: 10px;
-          color: #A8DADC;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          margin-bottom: 4px;
-        }
-        .info-value {
-          font-size: 16px;
-          font-weight: 700;
-          color: #ffffff;
-        }
-        .content-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-        .info-box {
-          padding: 16px;
-          background-color: #F8F9FA;
-          border-left: 4px solid #2B4C7E;
-          border-radius: 6px;
-        }
-        .box-title {
-          font-size: 12px;
-          font-weight: 700;
-          color: #2B4C7E;
-          margin-bottom: 10px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .detail-row {
-          display: flex;
-          margin-bottom: 6px;
-        }
-        .detail-label {
-          font-weight: 600;
-          color: #6C757D;
-          width: 70px;
-          font-size: 12px;
-        }
-        .detail-value {
-          color: #1D3557;
-          font-size: 12px;
-          flex: 1;
-        }
-        .services-section {
-          margin-bottom: 20px;
-        }
-        .section-title {
-          font-size: 14px;
-          font-weight: 700;
-          color: #2B4C7E;
-          margin-bottom: 12px;
-          padding-bottom: 8px;
-          border-bottom: 3px solid #E63946;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 20px;
-          background-color: #ffffff;
-          border: 1px solid #dee2e6;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-        th {
-          background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
-          color: white;
-          padding: 12px 16px;
-          text-align: left;
-          font-weight: 600;
-          text-transform: uppercase;
-          font-size: 11px;
-          letter-spacing: 0.8px;
-        }
-        th:last-child {
-          text-align: right;
-        }
-        td {
-          padding: 14px 16px;
-          border-bottom: 1px solid #dee2e6;
-        }
-        tbody tr:last-child td {
-          border-bottom: none;
-        }
-        .total-section {
-          background: linear-gradient(135deg, #E63946 0%, #C62828 100%);
-          color: white;
-          padding: 20px 24px;
-          border-radius: 8px;
-          margin-bottom: 20px;
-        }
-        .total-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .total-label {
-          font-size: 16px;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-        }
-        .total-amount {
-          font-size: 32px;
-          font-weight: 700;
-        }
-        .footer {
-          margin-top: 20px;
-          padding-top: 15px;
-          border-top: 2px solid #DEE2E6;
-          text-align: center;
-          color: #6C757D;
-          font-size: 10px;
-          line-height: 1.6;
-        }
-        .footer-note {
-          margin-top: 8px;
-          font-style: italic;
-          font-size: 9px;
-          color: #868e96;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          ${logoBase64 ? `<img src="${logoBase64}" alt="Hardings Auto Garage" class="logo" />` : '<div class="company-name">HARDINGS AUTO GARAGE</div>'}
-          <div class="tagline">Swartruggens' Trusted Destination for Expert Mechanical Work</div>
-          <div class="contact-info">
+  return (
+    <Document>
+      <Page size="A4" style={pdfStyles.page}>
+        <PDFView style={pdfStyles.header}>
+          <PDFImage src={LOGO_URL} style={pdfStyles.logo} />
+          <PDFText style={pdfStyles.tagline}>
+            Swartruggens&apos; Trusted Destination for Expert Mechanical Work
+          </PDFText>
+          <PDFText style={pdfStyles.contactInfo}>
             Phone: +27 76 268 3721 | WhatsApp Available
-          </div>
-        </div>
+          </PDFText>
+        </PDFView>
 
-        <div class="quote-header">
-          <div class="quote-info-item">
-            <div class="info-label">Quote Number</div>
-            <div class="info-value">${quoteNumber}</div>
-          </div>
-          <div class="quote-info-item" style="text-align: right;">
-            <div class="info-label">Date</div>
-            <div class="info-value">${date}</div>
-          </div>
-        </div>
+        <PDFView style={pdfStyles.quoteHeader}>
+          <PDFView style={pdfStyles.quoteInfoItem}>
+            <PDFText style={pdfStyles.infoLabel}>Quote Number</PDFText>
+            <PDFText style={pdfStyles.infoValue}>{quoteNumber}</PDFText>
+          </PDFView>
+          <PDFView style={{ ...pdfStyles.quoteInfoItem, alignItems: 'flex-end' }}>
+            <PDFText style={pdfStyles.infoLabel}>Date</PDFText>
+            <PDFText style={pdfStyles.infoValue}>{date}</PDFText>
+          </PDFView>
+        </PDFView>
 
-        <div class="content-grid">
-          <div class="info-box">
-            <div class="box-title">Client Information</div>
-            <div class="detail-row">
-              <div class="detail-label">Name:</div>
-              <div class="detail-value">${quoteData.clientName}</div>
-            </div>
-            <div class="detail-row">
-              <div class="detail-label">Phone:</div>
-              <div class="detail-value">${quoteData.clientPhone}</div>
-            </div>
-            ${
-              quoteData.clientEmail
-                ? `
-            <div class="detail-row">
-              <div class="detail-label">Email:</div>
-              <div class="detail-value">${quoteData.clientEmail}</div>
-            </div>
-            `
-                : ""
-            }
-          </div>
+        <PDFView style={pdfStyles.contentGrid}>
+          <PDFView style={pdfStyles.infoBox}>
+            <PDFText style={pdfStyles.boxTitle}>Client Information</PDFText>
+            <PDFView style={pdfStyles.detailRow}>
+              <PDFText style={pdfStyles.detailLabel}>Name:</PDFText>
+              <PDFText style={pdfStyles.detailValue}>{quoteData.clientName}</PDFText>
+            </PDFView>
+            <PDFView style={pdfStyles.detailRow}>
+              <PDFText style={pdfStyles.detailLabel}>Phone:</PDFText>
+              <PDFText style={pdfStyles.detailValue}>{quoteData.clientPhone}</PDFText>
+            </PDFView>
+            {quoteData.clientEmail && (
+              <PDFView style={pdfStyles.detailRow}>
+                <PDFText style={pdfStyles.detailLabel}>Email:</PDFText>
+                <PDFText style={pdfStyles.detailValue}>{quoteData.clientEmail}</PDFText>
+              </PDFView>
+            )}
+          </PDFView>
 
-          <div class="info-box">
-            <div class="box-title">Vehicle Information</div>
-            <div class="detail-row">
-              <div class="detail-label">Make:</div>
-              <div class="detail-value">${quoteData.vehicleMake}</div>
-            </div>
-            <div class="detail-row">
-              <div class="detail-label">Model:</div>
-              <div class="detail-value">${quoteData.vehicleModel}</div>
-            </div>
-            ${
-              quoteData.vehicleYear
-                ? `
-            <div class="detail-row">
-              <div class="detail-label">Year:</div>
-              <div class="detail-value">${quoteData.vehicleYear}</div>
-            </div>
-            `
-                : ""
-            }
-          </div>
-        </div>
+          <PDFView style={pdfStyles.infoBox}>
+            <PDFText style={pdfStyles.boxTitle}>Vehicle Information</PDFText>
+            <PDFView style={pdfStyles.detailRow}>
+              <PDFText style={pdfStyles.detailLabel}>Make:</PDFText>
+              <PDFText style={pdfStyles.detailValue}>{quoteData.vehicleMake}</PDFText>
+            </PDFView>
+            <PDFView style={pdfStyles.detailRow}>
+              <PDFText style={pdfStyles.detailLabel}>Model:</PDFText>
+              <PDFText style={pdfStyles.detailValue}>{quoteData.vehicleModel}</PDFText>
+            </PDFView>
+            {quoteData.vehicleYear && (
+              <PDFView style={pdfStyles.detailRow}>
+                <PDFText style={pdfStyles.detailLabel}>Year:</PDFText>
+                <PDFText style={pdfStyles.detailValue}>{quoteData.vehicleYear}</PDFText>
+              </PDFView>
+            )}
+          </PDFView>
+        </PDFView>
 
-        <div class="services-section">
-          <div class="section-title">Services Quoted</div>
-          <table>
-            <thead>
-              <tr>
-                <th>Service Description</th>
-                <th style="text-align: right;">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${servicesHTML}
-            </tbody>
-          </table>
-        </div>
+        <PDFView style={pdfStyles.servicesSection}>
+          <PDFText style={pdfStyles.sectionTitle}>Services Quoted</PDFText>
+          <PDFView style={pdfStyles.table}>
+            <PDFView style={pdfStyles.tableHeader}>
+              <PDFText style={{ ...pdfStyles.tableHeaderText, flex: 1 }}>Service Description</PDFText>
+              <PDFText style={{ ...pdfStyles.tableHeaderText, width: 80, textAlign: 'right' }}>Amount</PDFText>
+            </PDFView>
+            {quoteData.services.map((service, index) => {
+              const rowStyle = index % 2 === 0 
+                ? [pdfStyles.tableRow, pdfStyles.tableRowAlt]
+                : [pdfStyles.tableRow];
+              return (
+              <PDFView key={index} style={rowStyle}>
+                <PDFView style={pdfStyles.serviceNameCell}>
+                  <PDFText style={pdfStyles.serviceName}>{service.name}</PDFText>
+                  {service.description && (
+                    <PDFText style={pdfStyles.serviceDescription}>{service.description}</PDFText>
+                  )}
+                </PDFView>
+                <PDFView style={pdfStyles.servicePriceCell}>
+                  <PDFText style={pdfStyles.servicePrice}>R {parseFloat(service.price).toFixed(2)}</PDFText>
+                </PDFView>
+              </PDFView>
+              );
+            })}
+          </PDFView>
+        </PDFView>
 
-        <div class="total-section">
-          <div class="total-row">
-            <div class="total-label">Total Amount</div>
-            <div class="total-amount">R ${total.toFixed(2)}</div>
-          </div>
-        </div>
+        <PDFView style={pdfStyles.totalSection}>
+          <PDFText style={pdfStyles.totalLabel}>Total Amount</PDFText>
+          <PDFText style={pdfStyles.totalAmount}>R {total.toFixed(2)}</PDFText>
+        </PDFView>
 
-        <div class="footer">
-          <strong>Hardings Auto Garage</strong><br>
-          Expert mechanical work, performance upgrades, and reliable servicing<br>
-          From routine maintenance to full Lexus V8 engine conversions
-          <div class="footer-note">
-            This quote is valid for 30 days from the date of issue.<br>
-            All prices are in South African Rand (ZAR) and include VAT where applicable.
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
+        <PDFView style={pdfStyles.footer}>
+          <PDFText style={{ fontWeight: 'bold', marginBottom: 4 }}>Hardings Auto Garage</PDFText>
+          <PDFText>Expert mechanical work, performance upgrades, and reliable servicing</PDFText>
+          <PDFText>From routine maintenance to full Lexus V8 engine conversions</PDFText>
+          <PDFView style={pdfStyles.footerNote}>
+            <PDFText>This quote is valid for 30 days from the date of issue.</PDFText>
+            <PDFText>All prices are in South African Rand (ZAR) and include VAT where applicable.</PDFText>
+          </PDFView>
+        </PDFView>
+      </Page>
+    </Document>
+  );
+};
 
-  const { uri } = await Print.printToFileAsync({ html });
-  return uri;
+const generateProfessionalPDF = async (
+  quoteData: QuoteData,
+  quoteNumber: string
+): Promise<string> => {
+  console.log("Creating PDF document from scratch...");
+  const doc = <QuotePDFDocument quoteData={quoteData} quoteNumber={quoteNumber} />;
+  const asPdf = pdf(doc);
+  const blob = await asPdf.toBlob();
+  
+  if (Platform.OS === "web") {
+    const url = URL.createObjectURL(blob);
+    return url;
+  } else {
+    const reader = new FileReader();
+    const base64 = await new Promise<string>((resolve, reject) => {
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    
+    const fileUri = `${FileSystem.cacheDirectory}quote_${quoteNumber}.pdf`;
+    await FileSystem.writeAsStringAsync(fileUri, base64, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    
+    return fileUri;
+  }
 };
 
 export default function QuotePreviewScreen() {
@@ -485,7 +463,7 @@ export default function QuotePreviewScreen() {
       console.log("PDF generated for WhatsApp at:", pdfUri);
 
       const phoneNumber = quoteData.clientPhone.replace(/\D/g, "");
-      const message = `Hi ${quoteData.clientName}, here's your quote from Hardings Auto Garage.\n\nQuote #${quoteNumber}\nVehicle: ${quoteData.vehicleMake} ${quoteData.vehicleModel}${quoteData.vehicleYear ? ` (${quoteData.vehicleYear})` : ""}\nTotal: R ${total.toFixed(2)}\n\nPlease find the detailed quote attached.`;
+      const message = `Hi ${quoteData.clientName}, here is your quote from Hardings Auto Garage.\n\nQuote #${quoteNumber}\nVehicle: ${quoteData.vehicleMake} ${quoteData.vehicleModel}${quoteData.vehicleYear ? ` (${quoteData.vehicleYear})` : ""}\nTotal: R ${total.toFixed(2)}\n\nPlease find the detailed quote attached.`;
 
       if (Platform.OS === "web") {
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
