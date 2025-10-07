@@ -52,16 +52,34 @@ const generateProfessionalPDF = async (
 
   let logoBase64 = "";
   try {
-    const response = await fetch(LOGO_URL);
-    const blob = await response.blob();
-    const reader = new FileReader();
-    logoBase64 = await new Promise<string>((resolve, reject) => {
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    if (Platform.OS === "web") {
+      const response = await fetch(LOGO_URL);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      logoBase64 = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } else {
+      const response = await fetch(LOGO_URL);
+      const base64 = await response.text();
+      if (base64.startsWith('data:')) {
+        logoBase64 = base64;
+      } else {
+        const imageData = await FileSystem.readAsStringAsync(
+          await FileSystem.downloadAsync(
+            LOGO_URL,
+            FileSystem.cacheDirectory + 'logo.png'
+          ).then(res => res.uri),
+          { encoding: FileSystem.EncodingType.Base64 }
+        );
+        logoBase64 = `data:image/png;base64,${imageData}`;
+      }
+    }
   } catch (error) {
     console.error("Error loading logo:", error);
+    logoBase64 = LOGO_URL;
   }
 
   const servicesHTML = quoteData.services
