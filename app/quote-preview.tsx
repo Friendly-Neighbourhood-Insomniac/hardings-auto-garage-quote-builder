@@ -227,7 +227,7 @@ const pdfStyles = PDFStyleSheet.create({
   },
 });
 
-const QuotePDFDocument = ({ quoteData, quoteNumber }: { quoteData: QuoteData; quoteNumber: string }) => {
+const QuotePDFDocument = ({ quoteData, quoteNumber, logoBase64 }: { quoteData: QuoteData; quoteNumber: string; logoBase64: string }) => {
   const total = quoteData.services.reduce(
     (sum, service) => sum + parseFloat(service.price),
     0
@@ -243,7 +243,7 @@ const QuotePDFDocument = ({ quoteData, quoteNumber }: { quoteData: QuoteData; qu
       <Page size="A4" style={pdfStyles.page}>
         <PDFView style={pdfStyles.header}>
           <PDFImage 
-            src={LOGO_URL}
+            src={logoBase64}
             style={pdfStyles.logo}
           />
           <PDFText style={pdfStyles.tagline}>
@@ -350,13 +350,34 @@ const QuotePDFDocument = ({ quoteData, quoteNumber }: { quoteData: QuoteData; qu
   );
 };
 
+const fetchImageAsBase64 = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error fetching image:", error);
+    throw error;
+  }
+};
+
 const generateProfessionalPDF = async (
   quoteData: QuoteData,
   quoteNumber: string
 ): Promise<string> => {
   console.log("Creating PDF document from scratch...");
   console.log("Logo URL being used:", LOGO_URL);
-  const doc = <QuotePDFDocument quoteData={quoteData} quoteNumber={quoteNumber} />;
+  
+  console.log("Converting logo to base64...");
+  const logoBase64 = await fetchImageAsBase64(LOGO_URL);
+  console.log("Logo converted to base64 successfully");
+  
+  const doc = <QuotePDFDocument quoteData={quoteData} quoteNumber={quoteNumber} logoBase64={logoBase64} />;
   const asPdf = pdf(doc);
   const blob = await asPdf.toBlob();
   
