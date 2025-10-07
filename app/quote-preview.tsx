@@ -2,12 +2,13 @@ import * as FileSystem from "expo-file-system";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { useLocalSearchParams, router, Stack } from "expo-router";
-import { Download, MessageCircle, ArrowLeft, Eye } from "lucide-react-native";
+import { Download, MessageCircle, ArrowLeft } from "lucide-react-native";
 import React, { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   Alert,
   Image,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -34,7 +35,10 @@ interface QuoteData {
   services: ServiceItem[];
 }
 
-const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: string) => {
+const generateProfessionalPDF = async (
+  quoteData: QuoteData,
+  quoteNumber: string
+): Promise<string> => {
   const total = quoteData.services.reduce(
     (sum, service) => sum + parseFloat(service.price),
     0
@@ -45,153 +49,184 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: 
     day: "numeric",
   });
 
+  let logoBase64 = "";
+  try {
+    const response = await fetch(LOGO_URL);
+    const blob = await response.blob();
+    const reader = new FileReader();
+    logoBase64 = await new Promise<string>((resolve, reject) => {
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error loading logo:", error);
+  }
+
   const servicesHTML = quoteData.services
     .map(
       (service, index) => `
     <tr style="${index % 2 === 0 ? "background-color: #f8f9fa;" : ""}">
-      <td style="padding: 10px 12px; border-bottom: 1px solid #dee2e6; font-size: 10px; color: #2c3e50;">${service.name}</td>
-      <td style="padding: 10px 12px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 10px; color: #1D3557;">R ${parseFloat(service.price).toFixed(2)}</td>
+      <td style="padding: 14px 16px; border-bottom: 1px solid #dee2e6; font-size: 13px; color: #2c3e50;">${service.name}</td>
+      <td style="padding: 14px 16px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 13px; color: #1D3557;">R ${parseFloat(service.price).toFixed(2)}</td>
     </tr>
   `
     )
     .join("");
 
-  return `
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <style>
+        @page {
+          size: A4;
+          margin: 15mm;
+        }
         * {
           margin: 0;
           padding: 0;
           box-sizing: border-box;
         }
-        @page {
-          size: A4;
-          margin: 20mm 15mm;
-        }
         body {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           color: #1D3557;
-          line-height: 1.4;
-          font-size: 10px;
+          line-height: 1.5;
+          font-size: 13px;
+          padding: 0;
+          margin: 0;
+        }
+        .container {
           max-width: 100%;
-          overflow: hidden;
+          margin: 0 auto;
         }
         .header {
           text-align: center;
-          margin-bottom: 12px;
-          padding-bottom: 10px;
-          border-bottom: 3px solid #E63946;
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 4px solid #E63946;
         }
         .logo {
-          width: 160px;
+          width: 220px;
           height: auto;
-          margin: 0 auto 6px;
+          margin: 0 auto 10px;
           display: block;
         }
-        .contact-info {
-          font-size: 9px;
+        .company-name {
+          font-size: 24px;
+          font-weight: 700;
+          color: #1D3557;
+          margin-bottom: 5px;
+        }
+        .tagline {
+          font-size: 11px;
           color: #6C757D;
-          line-height: 1.4;
+          margin-bottom: 8px;
+        }
+        .contact-info {
+          font-size: 11px;
+          color: #6C757D;
+          line-height: 1.6;
         }
         .quote-header {
+          background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
+          color: white;
+          padding: 18px 20px;
+          border-radius: 8px;
+          margin-bottom: 20px;
           display: flex;
           justify-content: space-between;
-          margin-bottom: 12px;
-          padding: 10px 14px;
-          background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
-          border-radius: 6px;
+          align-items: center;
         }
         .quote-info-item {
           flex: 1;
         }
         .info-label {
-          font-size: 8px;
+          font-size: 10px;
           color: #A8DADC;
           text-transform: uppercase;
-          letter-spacing: 0.3px;
-          margin-bottom: 2px;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
         }
         .info-value {
-          font-size: 11px;
+          font-size: 16px;
           font-weight: 700;
           color: #ffffff;
         }
         .content-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-bottom: 12px;
+          gap: 15px;
+          margin-bottom: 20px;
         }
         .info-box {
-          padding: 10px;
+          padding: 16px;
           background-color: #F8F9FA;
-          border-left: 3px solid #2B4C7E;
-          border-radius: 4px;
+          border-left: 4px solid #2B4C7E;
+          border-radius: 6px;
         }
         .box-title {
-          font-size: 9px;
+          font-size: 12px;
           font-weight: 700;
           color: #2B4C7E;
-          margin-bottom: 5px;
+          margin-bottom: 10px;
           text-transform: uppercase;
-          letter-spacing: 0.3px;
+          letter-spacing: 0.5px;
         }
         .detail-row {
           display: flex;
-          margin-bottom: 2px;
+          margin-bottom: 6px;
         }
         .detail-label {
           font-weight: 600;
           color: #6C757D;
-          width: 55px;
-          font-size: 9px;
+          width: 70px;
+          font-size: 12px;
         }
         .detail-value {
           color: #1D3557;
-          font-size: 9px;
+          font-size: 12px;
           flex: 1;
         }
         .services-section {
-          margin-bottom: 12px;
+          margin-bottom: 20px;
         }
         .section-title {
-          font-size: 11px;
+          font-size: 14px;
           font-weight: 700;
           color: #2B4C7E;
-          margin-bottom: 8px;
-          padding-bottom: 5px;
-          border-bottom: 2px solid #E63946;
+          margin-bottom: 12px;
+          padding-bottom: 8px;
+          border-bottom: 3px solid #E63946;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.8px;
         }
         table {
           width: 100%;
           border-collapse: collapse;
-          margin-bottom: 12px;
+          margin-bottom: 20px;
           background-color: #ffffff;
           border: 1px solid #dee2e6;
-          border-radius: 6px;
+          border-radius: 8px;
           overflow: hidden;
         }
         th {
           background: linear-gradient(135deg, #2B4C7E 0%, #1D3557 100%);
           color: white;
-          padding: 8px 12px;
+          padding: 12px 16px;
           text-align: left;
           font-weight: 600;
           text-transform: uppercase;
-          font-size: 9px;
-          letter-spacing: 0.5px;
+          font-size: 11px;
+          letter-spacing: 0.8px;
         }
         th:last-child {
           text-align: right;
         }
         td {
-          padding: 10px 12px;
+          padding: 14px 16px;
           border-bottom: 1px solid #dee2e6;
         }
         tbody tr:last-child td {
@@ -200,9 +235,9 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: 
         .total-section {
           background: linear-gradient(135deg, #E63946 0%, #C62828 100%);
           color: white;
-          padding: 12px 16px;
-          border-radius: 6px;
-          margin-bottom: 12px;
+          padding: 20px 24px;
+          border-radius: 8px;
+          margin-bottom: 20px;
         }
         .total-row {
           display: flex;
@@ -210,132 +245,137 @@ const generateQuoteHTML = (quoteData: QuoteData, quoteNumber: string, logoUrl?: 
           align-items: center;
         }
         .total-label {
-          font-size: 12px;
+          font-size: 16px;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.5px;
+          letter-spacing: 0.8px;
         }
         .total-amount {
-          font-size: 20px;
+          font-size: 32px;
           font-weight: 700;
         }
         .footer {
-          margin-top: 12px;
-          padding-top: 10px;
-          border-top: 1px solid #DEE2E6;
+          margin-top: 20px;
+          padding-top: 15px;
+          border-top: 2px solid #DEE2E6;
           text-align: center;
           color: #6C757D;
-          font-size: 8px;
-          line-height: 1.5;
+          font-size: 10px;
+          line-height: 1.6;
         }
         .footer-note {
-          margin-top: 5px;
+          margin-top: 8px;
           font-style: italic;
-          font-size: 7px;
+          font-size: 9px;
           color: #868e96;
         }
       </style>
     </head>
     <body>
-      <div class="header">
-        ${logoUrl ? `<img src="${logoUrl}" alt="Hardings Auto Garage" class="logo" />` : ''}
-        <div class="contact-info">
-          Swartruggens' Trusted Destination for Expert Mechanical Work<br>
-          Phone: +27 76 268 3721 | WhatsApp Available
-        </div>
-      </div>
-
-      <div class="quote-header">
-        <div class="quote-info-item">
-          <div class="info-label">Quote Number</div>
-          <div class="info-value">${quoteNumber}</div>
-        </div>
-        <div class="quote-info-item" style="text-align: right;">
-          <div class="info-label">Date</div>
-          <div class="info-value">${date}</div>
-        </div>
-      </div>
-
-      <div class="content-grid">
-        <div class="info-box">
-          <div class="box-title">Client Information</div>
-          <div class="detail-row">
-            <div class="detail-label">Name:</div>
-            <div class="detail-value">${quoteData.clientName}</div>
+      <div class="container">
+        <div class="header">
+          ${logoBase64 ? `<img src="${logoBase64}" alt="Hardings Auto Garage" class="logo" />` : '<div class="company-name">HARDINGS AUTO GARAGE</div>'}
+          <div class="tagline">Swartruggens' Trusted Destination for Expert Mechanical Work</div>
+          <div class="contact-info">
+            Phone: +27 76 268 3721 | WhatsApp Available
           </div>
-          <div class="detail-row">
-            <div class="detail-label">Phone:</div>
-            <div class="detail-value">${quoteData.clientPhone}</div>
-          </div>
-          ${
-            quoteData.clientEmail
-              ? `
-          <div class="detail-row">
-            <div class="detail-label">Email:</div>
-            <div class="detail-value">${quoteData.clientEmail}</div>
-          </div>
-          `
-              : ""
-          }
         </div>
 
-        <div class="info-box">
-          <div class="box-title">Vehicle Information</div>
-          <div class="detail-row">
-            <div class="detail-label">Make:</div>
-            <div class="detail-value">${quoteData.vehicleMake}</div>
+        <div class="quote-header">
+          <div class="quote-info-item">
+            <div class="info-label">Quote Number</div>
+            <div class="info-value">${quoteNumber}</div>
           </div>
-          <div class="detail-row">
-            <div class="detail-label">Model:</div>
-            <div class="detail-value">${quoteData.vehicleModel}</div>
+          <div class="quote-info-item" style="text-align: right;">
+            <div class="info-label">Date</div>
+            <div class="info-value">${date}</div>
           </div>
-          ${
-            quoteData.vehicleYear
-              ? `
-          <div class="detail-row">
-            <div class="detail-label">Year:</div>
-            <div class="detail-value">${quoteData.vehicleYear}</div>
-          </div>
-          `
-              : ""
-          }
         </div>
-      </div>
 
-      <div class="services-section">
-        <div class="section-title">Services Quoted</div>
-        <table>
-          <thead>
-            <tr>
-              <th>Service Description</th>
-              <th style="text-align: right;">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${servicesHTML}
-          </tbody>
-        </table>
-      </div>
+        <div class="content-grid">
+          <div class="info-box">
+            <div class="box-title">Client Information</div>
+            <div class="detail-row">
+              <div class="detail-label">Name:</div>
+              <div class="detail-value">${quoteData.clientName}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Phone:</div>
+              <div class="detail-value">${quoteData.clientPhone}</div>
+            </div>
+            ${
+              quoteData.clientEmail
+                ? `
+            <div class="detail-row">
+              <div class="detail-label">Email:</div>
+              <div class="detail-value">${quoteData.clientEmail}</div>
+            </div>
+            `
+                : ""
+            }
+          </div>
 
-      <div class="total-section">
-        <div class="total-row">
-          <div class="total-label">Total Amount</div>
-          <div class="total-amount">R ${total.toFixed(2)}</div>
+          <div class="info-box">
+            <div class="box-title">Vehicle Information</div>
+            <div class="detail-row">
+              <div class="detail-label">Make:</div>
+              <div class="detail-value">${quoteData.vehicleMake}</div>
+            </div>
+            <div class="detail-row">
+              <div class="detail-label">Model:</div>
+              <div class="detail-value">${quoteData.vehicleModel}</div>
+            </div>
+            ${
+              quoteData.vehicleYear
+                ? `
+            <div class="detail-row">
+              <div class="detail-label">Year:</div>
+              <div class="detail-value">${quoteData.vehicleYear}</div>
+            </div>
+            `
+                : ""
+            }
+          </div>
         </div>
-      </div>
 
-      <div class="footer">
-        <strong>Hardings Auto Garage</strong><br>
-        Expert mechanical work, performance upgrades, and reliable servicing<br>
-        From routine maintenance to full Lexus V8 engine conversions
-        <div class="footer-note">
-          This quote is valid for 30 days from the date of issue.<br>
-          All prices are in South African Rand (ZAR) and include VAT where applicable.
+        <div class="services-section">
+          <div class="section-title">Services Quoted</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Service Description</th>
+                <th style="text-align: right;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${servicesHTML}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="total-section">
+          <div class="total-row">
+            <div class="total-label">Total Amount</div>
+            <div class="total-amount">R ${total.toFixed(2)}</div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <strong>Hardings Auto Garage</strong><br>
+          Expert mechanical work, performance upgrades, and reliable servicing<br>
+          From routine maintenance to full Lexus V8 engine conversions
+          <div class="footer-note">
+            This quote is valid for 30 days from the date of issue.<br>
+            All prices are in South African Rand (ZAR) and include VAT where applicable.
+          </div>
         </div>
       </div>
     </body>
     </html>
   `;
+
+  const { uri } = await Print.printToFileAsync({ html });
+  return uri;
 };
 
 export default function QuotePreviewScreen() {
@@ -344,20 +384,20 @@ export default function QuotePreviewScreen() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   let quoteData: QuoteData | null = null;
-  
+
   try {
     if (params.quoteData) {
-      const dataString = Array.isArray(params.quoteData) 
-        ? params.quoteData[0] 
+      const dataString = Array.isArray(params.quoteData)
+        ? params.quoteData[0]
         : params.quoteData;
-      
-      if (typeof dataString === 'string') {
+
+      if (typeof dataString === "string") {
         quoteData = JSON.parse(dataString);
       }
     }
   } catch (error) {
-    console.error('Error parsing quote data:', error, params.quoteData);
-    Alert.alert('Error', 'Invalid quote data. Please try again.');
+    console.error("Error parsing quote data:", error, params.quoteData);
+    Alert.alert("Error", "Invalid quote data. Please try again.");
   }
 
   if (!quoteData) {
@@ -377,44 +417,37 @@ export default function QuotePreviewScreen() {
   const handleDownloadPDF = async () => {
     try {
       setIsGenerating(true);
-      console.log('Starting PDF generation...');
-      
-      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
-      console.log('HTML generated, printing to file...');
-      
-      const result = await Print.printToFileAsync({ html });
-      console.log('Print result:', result);
+      console.log("Generating PDF...");
 
-      if (!result || !result.uri) {
-        console.error('Invalid print result:', result);
-        throw new Error("Failed to generate PDF file");
-      }
-
-      const { uri } = result;
-      console.log('PDF generated at:', uri);
+      const pdfUri = await generateProfessionalPDF(quoteData, quoteNumber);
+      console.log("PDF generated at:", pdfUri);
 
       if (Platform.OS === "web") {
         const link = document.createElement("a");
-        link.href = uri;
+        link.href = pdfUri;
         link.download = `Quote_${quoteNumber}.pdf`;
         link.click();
         Alert.alert("Success", "Quote downloaded successfully!");
       } else {
         const newPath = `${FileSystem.documentDirectory}Quote_${quoteNumber}.pdf`;
         await FileSystem.moveAsync({
-          from: uri,
+          from: pdfUri,
           to: newPath,
         });
 
         if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(newPath);
+          await Sharing.shareAsync(newPath, {
+            mimeType: "application/pdf",
+            dialogTitle: "Save Quote",
+          });
         } else {
           Alert.alert("Success", "Quote saved successfully!");
         }
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       Alert.alert("Error", `Failed to generate PDF: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
@@ -424,88 +457,64 @@ export default function QuotePreviewScreen() {
   const handleWhatsAppShare = async () => {
     try {
       setIsGenerating(true);
-      console.log('Starting WhatsApp share...');
-      
-      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
-      console.log('HTML generated for WhatsApp...');
-      
-      const result = await Print.printToFileAsync({ html });
-      console.log('WhatsApp print result:', result);
+      console.log("Generating PDF for WhatsApp...");
 
-      if (!result || !result.uri) {
-        console.error('Invalid WhatsApp print result:', result);
-        throw new Error("Failed to generate PDF file");
-      }
-
-      const { uri } = result;
-      console.log('WhatsApp PDF generated at:', uri);
-
-      const message = `Hi ${quoteData.clientName}, here's your quote from Hardings Auto Garage.\n\nQuote #${quoteNumber}\nVehicle: ${quoteData.vehicleMake} ${quoteData.vehicleModel}${quoteData.vehicleYear ? ` (${quoteData.vehicleYear})` : ""}\nTotal: R ${total.toFixed(2)}\n\nPlease find the detailed quote attached.`;
+      const pdfUri = await generateProfessionalPDF(quoteData, quoteNumber);
+      console.log("PDF generated for WhatsApp at:", pdfUri);
 
       const phoneNumber = quoteData.clientPhone.replace(/\D/g, "");
+      const message = `Hi ${quoteData.clientName}, here's your quote from Hardings Auto Garage.\n\nQuote #${quoteNumber}\nVehicle: ${quoteData.vehicleMake} ${quoteData.vehicleModel}${quoteData.vehicleYear ? ` (${quoteData.vehicleYear})` : ""}\nTotal: R ${total.toFixed(2)}\n\nPlease find the detailed quote attached.`;
 
       if (Platform.OS === "web") {
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
         window.open(whatsappUrl, "_blank");
+        
+        const link = document.createElement("a");
+        link.href = pdfUri;
+        link.download = `Quote_${quoteNumber}.pdf`;
+        link.click();
+        
         Alert.alert(
-          "Note",
-          "WhatsApp opened in new tab. You'll need to manually attach the PDF."
+          "WhatsApp Opened",
+          "The PDF has been downloaded. Please attach it manually in WhatsApp."
         );
       } else {
         const newPath = `${FileSystem.documentDirectory}Quote_${quoteNumber}.pdf`;
         await FileSystem.moveAsync({
-          from: uri,
+          from: pdfUri,
           to: newPath,
         });
 
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(newPath, {
-            mimeType: "application/pdf",
-            dialogTitle: "Share Quote via WhatsApp",
-            UTI: "com.adobe.pdf",
-          });
+        const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+        const canOpen = await Linking.canOpenURL(whatsappUrl);
+
+        if (canOpen) {
+          await Linking.openURL(whatsappUrl);
+          
+          setTimeout(async () => {
+            if (await Sharing.isAvailableAsync()) {
+              await Sharing.shareAsync(newPath, {
+                mimeType: "application/pdf",
+                dialogTitle: "Share Quote PDF",
+              });
+            }
+          }, 1000);
         } else {
-          Alert.alert(
-            "Error",
-            "Sharing is not available on this device."
-          );
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(newPath, {
+              mimeType: "application/pdf",
+              dialogTitle: "Share Quote via WhatsApp",
+            });
+          } else {
+            Alert.alert("Error", "WhatsApp is not installed on this device.");
+          }
         }
       }
     } catch (error) {
       console.error("Error sharing via WhatsApp:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       Alert.alert("Error", `Failed to share via WhatsApp: ${errorMessage}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handlePreviewPDF = async () => {
-    try {
-      setIsGenerating(true);
-      console.log('Starting PDF preview...');
-      
-      const html = generateQuoteHTML(quoteData, quoteNumber, LOGO_URL);
-      console.log('HTML generated for preview...');
-      
-      if (Platform.OS === "web") {
-        console.log('Generating PDF for web preview...');
-        const result = await Print.printToFileAsync({ html });
-        console.log('Web preview result:', result);
-        
-        if (!result || !result.uri) {
-          console.error('Invalid web preview result:', result);
-          throw new Error("Failed to generate PDF file");
-        }
-        window.open(result.uri, "_blank");
-      } else {
-        console.log('Opening native print dialog...');
-        await Print.printAsync({ html });
-      }
-    } catch (error) {
-      console.error("Error previewing PDF:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      Alert.alert("Error", `Failed to preview PDF: ${errorMessage}`);
     } finally {
       setIsGenerating(false);
     }
@@ -607,35 +616,24 @@ export default function QuotePreviewScreen() {
 
           <View style={styles.buttonContainer}>
             <Pressable
-              style={[styles.button, styles.previewButton]}
-              onPress={handlePreviewPDF}
+              style={[styles.button, styles.downloadButton]}
+              onPress={handleDownloadPDF}
               disabled={isGenerating}
             >
-              <Eye size={20} color={Colors.hardings.white} />
-              <Text style={styles.buttonText}>Preview Quote</Text>
+              <Download size={20} color={Colors.hardings.white} />
+              <Text style={styles.buttonText}>
+                {isGenerating ? "Generating..." : "Download PDF"}
+              </Text>
             </Pressable>
 
-            <View style={styles.actionRow}>
-              <Pressable
-                style={[styles.button, styles.downloadButton, styles.halfButton]}
-                onPress={handleDownloadPDF}
-                disabled={isGenerating}
-              >
-                <Download size={18} color={Colors.hardings.white} />
-                <Text style={styles.buttonTextSmall}>
-                  {isGenerating ? "Generating..." : "Download"}
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.button, styles.whatsappButton, styles.halfButton]}
-                onPress={handleWhatsAppShare}
-                disabled={isGenerating}
-              >
-                <MessageCircle size={18} color={Colors.hardings.white} />
-                <Text style={styles.buttonTextSmall}>WhatsApp</Text>
-              </Pressable>
-            </View>
+            <Pressable
+              style={[styles.button, styles.whatsappButton]}
+              onPress={handleWhatsAppShare}
+              disabled={isGenerating}
+            >
+              <MessageCircle size={20} color={Colors.hardings.white} />
+              <Text style={styles.buttonText}>Send via WhatsApp</Text>
+            </Pressable>
           </View>
 
           <View style={styles.bottomSpacer} />
@@ -781,14 +779,7 @@ const styles = StyleSheet.create({
     color: Colors.hardings.white,
   },
   buttonContainer: {
-    gap: 12,
-  },
-  actionRow: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  halfButton: {
-    flex: 1,
+    gap: 16,
   },
   button: {
     borderRadius: 14,
@@ -803,9 +794,6 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  previewButton: {
-    backgroundColor: Colors.hardings.secondary,
-  },
   downloadButton: {
     backgroundColor: Colors.hardings.primary,
   },
@@ -818,13 +806,6 @@ const styles = StyleSheet.create({
     color: Colors.hardings.white,
     marginLeft: 10,
     letterSpacing: 0.5,
-  },
-  buttonTextSmall: {
-    fontSize: 15,
-    fontWeight: "700" as const,
-    color: Colors.hardings.white,
-    marginLeft: 8,
-    letterSpacing: 0.3,
   },
   errorText: {
     fontSize: 16,
