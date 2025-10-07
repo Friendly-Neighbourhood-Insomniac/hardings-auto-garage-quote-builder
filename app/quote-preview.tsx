@@ -352,17 +352,38 @@ const QuotePDFDocument = ({ quoteData, quoteNumber, logoBase64 }: { quoteData: Q
 
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
   try {
-    const response = await fetch(url);
+    console.log("Fetching image from URL:", url);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'image/*',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const blob = await response.blob();
+    console.log("Blob received, size:", blob.size, "type:", blob.type);
+    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        console.log("Base64 conversion complete, length:", result.length);
+        resolve(result);
+      };
+      reader.onerror = (error) => {
+        console.error("FileReader error:", error);
+        reject(error);
+      };
       reader.readAsDataURL(blob);
     });
   } catch (error) {
     console.error("Error fetching image:", error);
-    throw error;
+    console.error("Error details:", error instanceof Error ? error.message : String(error));
+    throw new Error(`Failed to fetch image: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
 
@@ -373,9 +394,23 @@ const generateProfessionalPDF = async (
   console.log("Creating PDF document from scratch...");
   console.log("Logo URL being used:", LOGO_URL);
   
-  console.log("Converting logo to base64...");
-  const logoBase64 = await fetchImageAsBase64(LOGO_URL);
-  console.log("Logo converted to base64 successfully");
+  let logoBase64: string;
+  try {
+    console.log("Attempting to fetch logo directly...");
+    logoBase64 = await fetchImageAsBase64(LOGO_URL);
+    console.log("Logo converted to base64 successfully");
+  } catch (error) {
+    console.error("Failed to fetch logo, trying CORS proxy...");
+    try {
+      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(LOGO_URL)}`;
+      console.log("Using CORS proxy:", proxyUrl);
+      logoBase64 = await fetchImageAsBase64(proxyUrl);
+      console.log("Logo fetched via proxy successfully");
+    } catch (proxyError) {
+      console.error("CORS proxy also failed, using direct URL in PDF");
+      logoBase64 = LOGO_URL;
+    }
+  }
   
   const doc = <QuotePDFDocument quoteData={quoteData} quoteNumber={quoteNumber} logoBase64={logoBase64} />;
   const asPdf = pdf(doc);
