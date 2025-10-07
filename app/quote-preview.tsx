@@ -243,7 +243,7 @@ const QuotePDFDocument = ({ quoteData, quoteNumber }: { quoteData: QuoteData; qu
       <Page size="A4" style={pdfStyles.page}>
         <PDFView style={pdfStyles.header}>
           <PDFImage 
-            src="https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/3gralkwioadzfy34kng2o" 
+            src={LOGO_URL}
             style={pdfStyles.logo}
           />
           <PDFText style={pdfStyles.tagline}>
