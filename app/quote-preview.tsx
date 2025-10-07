@@ -23,6 +23,7 @@ import { LOGO_URL } from "@/constants/logo";
 interface ServiceItem {
   name: string;
   price: string;
+  description?: string;
 }
 
 interface QuoteData {
@@ -67,8 +68,11 @@ const generateProfessionalPDF = async (
     .map(
       (service, index) => `
     <tr style="${index % 2 === 0 ? "background-color: #f8f9fa;" : ""}">
-      <td style="padding: 14px 16px; border-bottom: 1px solid #dee2e6; font-size: 13px; color: #2c3e50;">${service.name}</td>
-      <td style="padding: 14px 16px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 13px; color: #1D3557;">R ${parseFloat(service.price).toFixed(2)}</td>
+      <td style="padding: 14px 16px; border-bottom: 1px solid #dee2e6; font-size: 13px; color: #2c3e50;">
+        <div style="font-weight: 600; margin-bottom: ${service.description ? "6px" : "0"};">${service.name}</div>
+        ${service.description ? `<div style="font-size: 11px; color: #6C757D; line-height: 1.5; margin-top: 4px; font-style: italic;">${service.description}</div>` : ""}
+      </td>
+      <td style="padding: 14px 16px; text-align: right; border-bottom: 1px solid #dee2e6; font-weight: 600; font-size: 13px; color: #1D3557; vertical-align: top;">R ${parseFloat(service.price).toFixed(2)}</td>
     </tr>
   `
     )
@@ -601,7 +605,12 @@ export default function QuotePreviewScreen() {
             <Text style={styles.sectionTitle}>Services</Text>
             {quoteData.services.map((service, index) => (
               <View key={index} style={styles.serviceRow}>
-                <Text style={styles.serviceName}>{service.name}</Text>
+                <View style={styles.serviceDetails}>
+                  <Text style={styles.serviceName}>{service.name}</Text>
+                  {service.description && (
+                    <Text style={styles.serviceDescription}>{service.description}</Text>
+                  )}
+                </View>
                 <Text style={styles.servicePrice}>
                   R {parseFloat(service.price).toFixed(2)}
                 </Text>
@@ -743,11 +752,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: Colors.hardings.lightGray,
+    alignItems: "flex-start",
+  },
+  serviceDetails: {
+    flex: 1,
+    marginRight: 12,
   },
   serviceName: {
-    flex: 1,
     fontSize: 15,
+    fontWeight: "600" as const,
     color: Colors.hardings.dark,
+    marginBottom: 4,
+  },
+  serviceDescription: {
+    fontSize: 12,
+    color: Colors.hardings.gray,
+    fontStyle: "italic" as const,
+    lineHeight: 18,
   },
   servicePrice: {
     fontSize: 15,

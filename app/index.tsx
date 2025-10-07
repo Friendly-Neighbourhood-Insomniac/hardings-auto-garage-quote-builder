@@ -23,6 +23,7 @@ import { CAR_MAKES, POPULAR_MODELS } from "@/constants/vehicles";
 interface ServiceItem {
   name: string;
   price: string;
+  description?: string;
 }
 
 interface QuoteData {
@@ -49,6 +50,9 @@ export default function QuoteBuilderScreen() {
   const [servicePrices, setServicePrices] = useState<Record<string, string>>(
     {}
   );
+  const [serviceDescriptions, setServiceDescriptions] = useState<Record<string, string>>(
+    {}
+  );
   const [showMakeDropdown, setShowMakeDropdown] = useState(false);
   const [showModelDropdown, setShowModelDropdown] = useState(false);
 
@@ -67,6 +71,10 @@ export default function QuoteBuilderScreen() {
 
   const updateServicePrice = (service: string, price: string) => {
     setServicePrices({ ...servicePrices, [service]: price });
+  };
+
+  const updateServiceDescription = (service: string, description: string) => {
+    setServiceDescriptions({ ...serviceDescriptions, [service]: description });
   };
 
   const calculateTotal = () => {
@@ -116,6 +124,7 @@ export default function QuoteBuilderScreen() {
       (service) => ({
         name: service,
         price: servicePrices[service],
+        description: serviceDescriptions[service] || undefined,
       })
     );
 
@@ -335,17 +344,33 @@ export default function QuoteBuilderScreen() {
                   <Text style={styles.serviceText}>{service}</Text>
                 </Pressable>
                 {isSelected && (
-                  <View style={styles.priceInputContainer}>
-                    <Text style={styles.currencySymbol}>R</Text>
-                    <TextInput
-                      style={styles.priceInput}
-                      value={servicePrices[service] || ""}
-                      onChangeText={(text) => updateServicePrice(service, text)}
-                      placeholder="0.00"
-                      placeholderTextColor={Colors.hardings.gray}
-                      keyboardType="decimal-pad"
-                    />
-                  </View>
+                  <>
+                    <View style={styles.priceInputContainer}>
+                      <Text style={styles.currencySymbol}>R</Text>
+                      <TextInput
+                        style={styles.priceInput}
+                        value={servicePrices[service] || ""}
+                        onChangeText={(text) => updateServicePrice(service, text)}
+                        placeholder="0.00"
+                        placeholderTextColor={Colors.hardings.gray}
+                        keyboardType="decimal-pad"
+                      />
+                    </View>
+                    {service === "Lexus V8 engine conversions" && (
+                      <View style={styles.descriptionInputContainer}>
+                        <TextInput
+                          style={styles.descriptionInput}
+                          value={serviceDescriptions[service] || ""}
+                          onChangeText={(text) => updateServiceDescription(service, text)}
+                          placeholder="Describe what this service includes..."
+                          placeholderTextColor={Colors.hardings.gray}
+                          multiline
+                          numberOfLines={3}
+                          textAlignVertical="top"
+                        />
+                      </View>
+                    )}
+                  </>
                 )}
               </View>
             );
@@ -542,6 +567,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 16,
     color: Colors.hardings.dark,
+  },
+  descriptionInputContainer: {
+    marginLeft: 36,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: Colors.hardings.border,
+    borderRadius: 8,
+    backgroundColor: Colors.hardings.white,
+  },
+  descriptionInput: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: Colors.hardings.dark,
+    minHeight: 70,
   },
   totalSection: {
     backgroundColor: Colors.hardings.primary,
