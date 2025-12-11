@@ -353,8 +353,11 @@ const QuotePDFDocument = ({ quoteData, quoteNumber, logoBase64 }: { quoteData: Q
 const fetchImageAsBase64 = async (url: string): Promise<string> => {
   try {
     console.log("Fetching image from URL:", url);
+    
     const response = await fetch(url, {
       method: 'GET',
+      mode: 'cors',
+      cache: 'force-cache',
       headers: {
         'Accept': 'image/*',
       },
@@ -367,10 +370,18 @@ const fetchImageAsBase64 = async (url: string): Promise<string> => {
     const blob = await response.blob();
     console.log("Blob received, size:", blob.size, "type:", blob.type);
     
+    if (blob.size === 0) {
+      throw new Error('Received empty blob');
+    }
+    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
+        if (!result || result.length < 100) {
+          reject(new Error('Invalid base64 result'));
+          return;
+        }
         console.log("Base64 conversion complete, length:", result.length);
         resolve(result);
       };
@@ -392,42 +403,58 @@ const generateProfessionalPDF = async (
   quoteNumber: string
 ): Promise<string> => {
   console.log("Creating PDF document from scratch...");
+  console.log("Platform:", Platform.OS);
   console.log("Logo URL being used:", LOGO_URL);
   
-  let logoBase64: string;
-  try {
-    console.log("Attempting to fetch logo directly...");
-    logoBase64 = await fetchImageAsBase64(LOGO_URL);
-    console.log("Logo converted to base64 successfully");
-  } catch {
-    console.error("Failed to fetch logo, trying CORS proxy...");
+  let logoBase64: string = LOGO_URL;
+  
+  const corsProxies = [
+    (url: string) => url,
+    (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  ];
+  
+  for (let i = 0; i < corsProxies.length; i++) {
     try {
-      const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(LOGO_URL)}`;
-      console.log("Using CORS proxy:", proxyUrl);
+      const proxyUrl = corsProxies[i](LOGO_URL);
+      console.log(`Attempt ${i + 1}: Fetching from`, proxyUrl);
       logoBase64 = await fetchImageAsBase64(proxyUrl);
-      console.log("Logo fetched via proxy successfully");
-    } catch {
-      console.error("CORS proxy also failed, using direct URL in PDF");
-      logoBase64 = LOGO_URL;
+      console.log(`Success on attempt ${i + 1}`);
+      break;
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error instanceof Error ? error.message : String(error));
+      if (i === corsProxies.length - 1) {
+        console.warn("All fetch attempts failed, PDF will use direct URL (may not work)");
+      }
     }
   }
   
-  const doc = <QuotePDFDocument quoteData={quoteData} quoteNumber={quoteNumber} logoBase64={logoBase64} />;
-  const asPdf = pdf(doc);
-  const blob = await asPdf.toBlob();
-  
-  if (Platform.OS === "web") {
-    const url = URL.createObjectURL(blob);
-    return url;
-  } else {
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
+  try {
+    console.log("Building PDF document...");
+    const doc = <QuotePDFDocument quoteData={quoteData} quoteNumber={quoteNumber} logoBase64={logoBase64} />;
+    const asPdf = pdf(doc);
+    console.log("Converting to blob...");
+    const blob = await asPdf.toBlob();
+    console.log("Blob created, size:", blob.size);
     
-    const file = new File(Paths.cache, `quote_${quoteNumber}.pdf`);
-    file.create({ intermediates: true });
-    file.write(uint8Array);
-    
-    return file.uri;
+    if (Platform.OS === "web") {
+      const url = URL.createObjectURL(blob);
+      console.log("PDF URL created for web:", url);
+      return url;
+    } else {
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      const file = new File(Paths.cache, `quote_${quoteNumber}.pdf`);
+      file.create({ intermediates: true });
+      file.write(uint8Array);
+      console.log("PDF saved to:", file.uri);
+      
+      return file.uri;
+    }
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    throw error;
   }
 };
 
