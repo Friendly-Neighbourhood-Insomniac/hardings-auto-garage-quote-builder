@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system/legacy";
+import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { Download, MessageCircle, ArrowLeft } from "lucide-react-native";
@@ -420,22 +420,14 @@ const generateProfessionalPDF = async (
     const url = URL.createObjectURL(blob);
     return url;
   } else {
-    const reader = new FileReader();
-    const base64 = await new Promise<string>((resolve, reject) => {
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        resolve(result.split(',')[1]);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
     
-    const fileUri = `${FileSystem.cacheDirectory}quote_${quoteNumber}.pdf`;
-    await FileSystem.writeAsStringAsync(fileUri, base64, {
-      encoding: FileSystem.EncodingType.Base64,
-    });
+    const file = new File(Paths.cache, `quote_${quoteNumber}.pdf`);
+    file.create({ intermediates: true });
+    file.write(uint8Array);
     
-    return fileUri;
+    return file.uri;
   }
 };
 
@@ -490,14 +482,8 @@ export default function QuotePreviewScreen() {
         link.click();
         Alert.alert("Success", "Quote downloaded successfully!");
       } else {
-        const newPath = `${FileSystem.documentDirectory}Quote_${quoteNumber}.pdf`;
-        await FileSystem.moveAsync({
-          from: pdfUri,
-          to: newPath,
-        });
-
         if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(newPath, {
+          await Sharing.shareAsync(pdfUri, {
             mimeType: "application/pdf",
             dialogTitle: "Save Quote",
           });
@@ -540,12 +526,6 @@ export default function QuotePreviewScreen() {
           "The PDF has been downloaded. Please attach it manually in WhatsApp."
         );
       } else {
-        const newPath = `${FileSystem.documentDirectory}Quote_${quoteNumber}.pdf`;
-        await FileSystem.moveAsync({
-          from: pdfUri,
-          to: newPath,
-        });
-
         const whatsappUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
         const canOpen = await Linking.canOpenURL(whatsappUrl);
 
@@ -554,7 +534,7 @@ export default function QuotePreviewScreen() {
           
           setTimeout(async () => {
             if (await Sharing.isAvailableAsync()) {
-              await Sharing.shareAsync(newPath, {
+              await Sharing.shareAsync(pdfUri, {
                 mimeType: "application/pdf",
                 dialogTitle: "Share Quote PDF",
               });
@@ -562,7 +542,7 @@ export default function QuotePreviewScreen() {
           }, 1000);
         } else {
           if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(newPath, {
+            await Sharing.shareAsync(pdfUri, {
               mimeType: "application/pdf",
               dialogTitle: "Share Quote via WhatsApp",
             });
