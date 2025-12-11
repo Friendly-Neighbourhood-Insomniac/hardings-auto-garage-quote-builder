@@ -3,8 +3,14 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Platform } from "react-native";
 
 import Colors from "@/constants/colors";
+
+// Simple polyfill for process (often needed by libraries like react-pdf)
+if (typeof process === "undefined") {
+  (global as any).process = { env: {} };
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -45,6 +51,19 @@ function RootLayoutNav() {
 export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync();
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "web" && "serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/service-worker.js")
+        .then((registration) => {
+          console.log("ServiceWorker registered:", registration);
+        })
+        .catch((error) => {
+          console.log("ServiceWorker registration failed:", error);
+        });
+    }
   }, []);
 
   return (
