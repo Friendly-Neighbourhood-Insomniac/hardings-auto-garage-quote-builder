@@ -1,4 +1,4 @@
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import { Download, MessageCircle, ArrowLeft } from "lucide-react-native";
@@ -399,14 +399,14 @@ const generateProfessionalPDF = async (
     console.log("Attempting to fetch logo directly...");
     logoBase64 = await fetchImageAsBase64(LOGO_URL);
     console.log("Logo converted to base64 successfully");
-  } catch (error) {
+  } catch {
     console.error("Failed to fetch logo, trying CORS proxy...");
     try {
       const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(LOGO_URL)}`;
       console.log("Using CORS proxy:", proxyUrl);
       logoBase64 = await fetchImageAsBase64(proxyUrl);
       console.log("Logo fetched via proxy successfully");
-    } catch (proxyError) {
+    } catch {
       console.error("CORS proxy also failed, using direct URL in PDF");
       logoBase64 = LOGO_URL;
     }

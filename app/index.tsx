@@ -139,7 +139,7 @@ export default function QuoteBuilderScreen() {
     };
 
     router.push({
-      pathname: "/quote-preview",
+      pathname: "/quote-preview" as any,
       params: { quoteData: JSON.stringify(quoteData) },
     });
   };
